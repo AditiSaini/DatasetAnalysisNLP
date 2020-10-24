@@ -1,0 +1,835 @@
+Stackoverflow Questions (git related)
+
+1) How do I undo the most recent local commits in Git?
+
+I accidentally committed the wrong files to Git, but I haven't pushed the commit to the server yet.
+How can I undo those commits from the local repository?
+
+Best Answer: Undo a commit and redo
+
+$ git commit -m "Something terribly misguided"             # (1)
+$ git reset HEAD~                                          # (2)
+<< edit files as necessary >>                              # (3)
+$ git add ...                                              # (4)
+$ git commit -c ORIG_HEAD                                  # (5)
+
+1. This is what you want to undo.
+2. This does nothing to your working tree (the state of your files on disk), but undoes the commit and leaves the changes you committed unstaged (so they'll appear as "Changes not staged for commit" in git status, so you'll need to add them again before committing). If you only want to add more changes to the previous commit, or change the commit message1, you could use git reset --soft HEAD~ instead, which is like git reset HEAD~2 but leaves your existing changes staged.
+3. Make corrections to working tree files.
+4. git add anything that you want to include in your new commit.
+5. Commit the changes, reusing the old commit message. reset copied the old head to .git/ORIG_HEAD; commit with -c ORIG_HEAD will open an editor, which initially contains the log message from the old commit and allows you to edit it. If you do not need to edit the message, you could use the -C option.
+
+Beware, however, that if you have added any new changes to the index, using commit --amend will add them to your previous commit.
+
+If the code is already pushed to your server and you have permissions to overwrite history (rebase) then:
+git push origin master --force
+
+You can also look at this answer:
+
+"How can I move HEAD back to a previous location? (Detached head) & Undo commits"
+
+The above answer will show you git reflog, which you can use to determine the SHA-1 for the commit to which you wish to revert. Once you have this value, use the sequence of commands as explained above.
+
+1 Note, however, that you don't need to reset to an earlier commit if you just made a mistake in your commit message. The easier option is to git reset (to unstage any changes you've made since) and then git commit --amend, which will open your default commit message editor pre-populated with the last commit message.
+
+2 HEAD~ is the same as HEAD~1. Also, see What is the HEAD in git?. It's helpful if you want to uncommit multiple commits.
+
+
+2) What is the difference between 'git pull' and 'git fetch'?
+
+What are the differences between git pull and git fetch?
+
+Best Answer:
+
+In the simplest terms, git pull does a git fetch followed by a git merge.
+
+You can do a git fetch at any time to update your remote-tracking branches under refs/remotes/<remote>/.
+
+This operation never changes any of your own local branches under refs/heads, and is safe to do without changing your working copy. I have even heard of people running git fetch periodically in a cron job in the background (although I wouldn't recommend doing this).
+
+A git pull is what you would do to bring a local branch up-to-date with its remote version, while also updating your other remote-tracking branches.
+
+From the Git documentation for git pull:
+
+    In its default mode, git pull is shorthand for git fetch followed by git merge FETCH_HEAD.
+
+
+3) How do I update a GitHub forked repository?
+
+I recently forked a project and applied several fixes. I then created a pull request which was then accepted.
+
+A few days later another change was made by another contributor. So my fork doesn't contain that change.
+
+How can I get that change into my fork? Do I need to delete and re-create my fork when I have further changes to contribute? Or is there an update button?
+
+Best Answer:
+
+
+
+In your local clone of your forked repository, you can add the original GitHub repository as a "remote". ("Remotes" are like nicknames for the URLs of repositories - origin is one, for example.) Then you can fetch all the branches from that upstream repository, and rebase your work to continue working on the upstream version. In terms of commands that might look like:
+
+# Add the remote, call it "upstream":
+
+git remote add upstream https://github.com/whoever/whatever.git
+
+# Fetch all the branches of that remote into remote-tracking branches,
+# such as upstream/main or upstream/master:
+
+git fetch upstream
+
+# Make sure that you're on your main branch:
+
+git checkout main
+
+# Rewrite your main branch so that any commits of yours that
+# aren't already in upstream/main are replayed on top of that
+# other branch:
+
+git rebase upstream/main
+
+If you don't want to rewrite the history of your main branch, (for example because other people may have cloned it) then you should replace the last command with git merge upstream/main. However, for making further pull requests that are as clean as possible, it's probably better to rebase.
+
+If you've rebased your branch onto upstream/main you may need to force the push in order to push it to your own forked repository on GitHub. You'd do that with:
+
+git push -f origin main
+
+You only need to use the -f the first time after you've rebased.
+
+
+4) How do I undo 'git add' before commit?
+
+I mistakenly added files to Git using the command:
+
+git add myfile.txt
+
+I have not yet run git commit. Is there a way to undo this, so these files won't be included in the commit?
+
+Best Answer:
+
+You can undo git add before commit with
+
+git reset <file>
+
+which will remove it from the current index (the "about to be committed" list) without changing anything else.
+
+You can use
+
+git reset
+
+without any file name to unstage all due changes. This can come in handy when there are too many files to be listed one by one in a reasonable amount of time.
+
+In old versions of Git, the above commands are equivalent to git reset HEAD <file> and git reset HEAD respectively, and will fail if HEAD is undefined (because you haven't yet made any commits in your repository) or ambiguous (because you created a branch called HEAD, which is a stupid thing that you shouldn't do). This was changed in Git 1.8.2, though, so in modern versions of Git you can use the commands above even prior to making your first commit:
+
+    "git reset" (without options or parameters) used to error out when you do not have any commits in your history, but it now gives you an empty index (to match non-existent commit you are not even on).
+
+
+5) How to modify existing, unpushed commit messages?
+
+I wrote the wrong thing in a commit message.
+
+How can I change the message? The commit has not been pushed yet.
+
+Best Answer: Amending the most recent commit message
+
+git commit --amend
+
+will open your editor, allowing you to change the commit message of the most recent commit. Additionally, you can set the commit message directly in the command line with:
+
+git commit --amend -m "New commit message"
+
+…however, this can make multi-line commit messages or small corrections more cumbersome to enter.
+
+Make sure you don't have any working copy changes staged before doing this or they will get committed too. (Unstaged changes will not get committed.)
+Changing the message of a commit that you've already pushed to your remote branch
+
+If you've already pushed your commit up to your remote branch, then - after amending your commit locally (as described above) - you'll also need to force push the commit with:
+
+git push <remote> <branch> --force
+# Or
+git push <remote> <branch> -f
+
+Warning: force-pushing will overwrite the remote branch with the state of your local one. If there are commits on the remote branch that you don't have in your local branch, you will lose those commits.
+
+Warning: be cautious about amending commits that you have already shared with other people. Amending commits essentially rewrites them to have different SHA IDs, which poses a problem if other people have copies of the old commit that you've rewritten. Anyone who has a copy of the old commit will need to synchronize their work with your newly re-written commit, which can sometimes be difficult, so make sure you coordinate with others when attempting to rewrite shared commit history, or just avoid rewriting shared commits altogether.
+Perform an interactive rebase
+
+Another option is to use interactive rebase. This allows you to edit any message you want to update even if it's not the latest message.
+
+In order to do a Git squash, follow these steps:
+
+// n is the number of commits up to the last commit you want to be able to edit
+git rebase -i HEAD~n
+
+Once you squash your commits - choose the e/r for editing the message:
+
+Important note about interactive rebase
+
+When you use git rebase -i HEAD~n there can be more than n commits. Git will "collect" all the commits in the last n commits, and if there was a merge somewhere in between that range you will see all the commits as well, so the outcome will be n + .
+Good tip:
+
+If you have to do it for more than a single branch and you might face conflicts when amending the content, set up git rerere and let Git resolve those conflicts automatically for you.
+
+Documentation
+
+    git-commit(1) Manual Page
+
+    git-rebase(1) Manual Page
+
+    git-push(1) Manual Page
+
+
+6) How do I revert a Git repository to a previous commit?
+
+How do I revert from my current state to a snapshot made on a certain commit?
+
+If I do git log, then I get the following output:
+
+$ git log
+commit a867b4af366350be2e7c21b8de9cc6504678a61b`
+Author: Me <me@me.com>
+Date:   Thu Nov 4 18:59:41 2010 -0400
+
+blah blah blah...
+
+commit 25eee4caef46ae64aa08e8ab3f988bc917ee1ce4
+Author: Me <me@me.com>
+Date:   Thu Nov 4 05:13:39 2010 -0400
+
+more blah blah blah...
+
+commit 0766c053c0ea2035e90f504928f8df3c9363b8bd
+Author: Me <me@me.com>
+Date:   Thu Nov 4 00:55:06 2010 -0400
+
+And yet more blah blah...
+
+commit 0d1d7fc32e5a947fbd92ee598033d85bfc445a50
+Author: Me <me@me.com>
+Date:   Wed Nov 3 23:56:08 2010 -0400
+
+Yep, more blah blah.
+
+How do I revert to the commit from November 3, i.e. commit 0d1d7fc?
+
+Best Answer:
+
+This depends a lot on what you mean by "revert".
+Temporarily switch to a different commit
+
+If you want to temporarily go back to it, fool around, then come back to where you are, all you have to do is check out the desired commit:
+
+# This will detach your HEAD, that is, leave you with no branch checked out:
+git checkout 0d1d7fc32
+
+Or if you want to make commits while you're there, go ahead and make a new branch while you're at it:
+
+git checkout -b old-state 0d1d7fc32
+
+To go back to where you were, just check out the branch you were on again. (If you've made changes, as always when switching branches, you'll have to deal with them as appropriate. You could reset to throw them away; you could stash, checkout, stash pop to take them with you; you could commit them to a branch there if you want a branch there.)
+Hard delete unpublished commits
+
+If, on the other hand, you want to really get rid of everything you've done since then, there are two possibilities. One, if you haven't published any of these commits, simply reset:
+
+# This will destroy any local modifications.
+# Don't do it if you have uncommitted work you want to keep.
+git reset --hard 0d1d7fc32
+
+# Alternatively, if there's work to keep:
+git stash
+git reset --hard 0d1d7fc32
+git stash pop
+# This saves the modifications, then reapplies that patch after resetting.
+# You could get merge conflicts, if you've modified things which were
+# changed since the commit you reset to.
+
+If you mess up, you've already thrown away your local changes, but you can at least get back to where you were before by resetting again.
+Undo published commits with new commits
+
+On the other hand, if you've published the work, you probably don't want to reset the branch, since that's effectively rewriting history. In that case, you could indeed revert the commits. With Git, revert has a very specific meaning: create a commit with the reverse patch to cancel it out. This way you don't rewrite any history.
+
+# This will create three separate revert commits:
+git revert a867b4af 25eee4ca 0766c053
+
+# It also takes ranges. This will revert the last two commits:
+git revert HEAD~2..HEAD
+
+#Similarly, you can revert a range of commits using commit hashes (non inclusive of first hash):
+git revert 0d1d7fc..a867b4a
+
+# Reverting a merge commit
+git revert -m 1 <merge_commit_sha>
+
+# To get just one, you could use `rebase -i` to squash them afterwards
+# Or, you could do it manually (be sure to do this at top level of the repo)
+# get your index and work tree into the desired state, without changing HEAD:
+git checkout 0d1d7fc32 .
+
+# Then commit. Be sure and write a good message describing what you just did
+git commit
+
+The git-revert manpage actually covers a lot of this in its description. Another useful link is this git-scm.com section discussing git-revert.
+
+If you decide you didn't want to revert after all, you can revert the revert (as described here) or reset back to before the revert (see the previous section).
+
+You may also find this answer helpful in this case:
+How can I move HEAD back to a previous location? (Detached head) & Undo commits
+
+
+7) How do I force “git pull” to overwrite local files?
+
+How do I force an overwrite of local files on a git pull?
+
+The scenario is the following:
+
+    A team member is modifying the templates for a website we are working on
+    They are adding some images to the images directory (but forgets to add them under source control)
+    They are sending the images by mail, later, to me
+    I'm adding the images under the source control and pushing them to GitHub together with other changes
+    They cannot pull updates from GitHub because Git doesn't want to overwrite their files.
+
+This is the error I'm getting:
+
+    error: Untracked working tree file 'public/images/icon.gif' would be overwritten by merge
+
+How do I force Git to overwrite them? The person is a designer - usually, I resolve all the conflicts by hand, so the server has the most recent version that they just need to update on their computer.
+
+Best Answer:
+
+Important: If you have any local changes, they will be lost. With or without --hard option, any local commits that haven't been pushed will be lost.[*]
+
+If you have any files that are not tracked by Git (e.g. uploaded user content), these files will not be affected.
+
+First, run a fetch to update all origin/<branch> refs to latest:
+
+git fetch --all
+
+Backup your current branch:
+
+git checkout -b backup-master
+
+Then, you have two options:
+
+git reset --hard origin/master
+
+OR If you are on some other branch:
+
+git reset --hard origin/<branch_name>
+
+Explanation:
+
+git fetch downloads the latest from remote without trying to merge or rebase anything.
+
+Then the git reset resets the master branch to what you just fetched. The --hard option changes all the files in your working tree to match the files in origin/master
+Maintain current local commits
+
+[*]: It's worth noting that it is possible to maintain current local commits by creating a branch from master before resetting:
+
+git checkout master
+git branch new-branch-to-save-current-commits
+git fetch --all
+git reset --hard origin/master
+
+After this, all of the old commits will be kept in new-branch-to-save-current-commits.
+Uncommitted changes
+
+Uncommitted changes, however (even staged), will be lost. Make sure to stash and commit anything you need. For that you can run the following:
+
+git stash
+
+And then to reapply these uncommitted changes:
+
+git stash pop
+
+
+8) How to remove local (untracked) files from the current Git working tree
+
+How do you delete untracked local files from your current working tree?
+
+Best Answer:
+
+    git-clean - Remove untracked files from the working tree
+    Synopsis
+
+    git clean [-d] [-f] [-i] [-n] [-q] [-e <pattern>] [-x | -X] [--] <path>…​
+
+    Description
+
+    Cleans the working tree by recursively removing files that are not under version control, starting from the current directory.
+
+    Normally, only files unknown to Git are removed, but if the -x option is specified, ignored files are also removed. This can, for example, be useful to remove all build products.
+
+    If any optional <path>... arguments are given, only those paths are affected.
+
+Step 1 is to show what will be deleted by using the -n option:
+
+# Print out the list of files which will be removed (dry run)
+git clean -n
+
+Clean Step - beware: this will delete files:
+
+# Delete the files from the repository
+git clean -f
+
+    To remove directories, run git clean -f -d or git clean -fd
+    To remove ignored files, run git clean -f -X or git clean -fX
+    To remove ignored and non-ignored files, run git clean -f -x or git clean -fx
+
+Note the case difference on the X for the two latter commands.
+
+If clean.requireForce is set to "true" (the default) in your configuration, one needs to specify -f otherwise nothing will actually happen.
+
+Again see the git-clean docs for more information.
+
+    Options
+
+    -f, --force
+
+    If the Git configuration variable clean.requireForce is not set to false, git clean will refuse to run unless given -f, -n or -i.
+
+    -x
+
+    Don’t use the standard ignore rules read from .gitignore (per directory) and $GIT_DIR/info/exclude, but do still use the ignore rules given with -e options. This allows removing all untracked files, including build products. This can be used (possibly in conjunction with git reset) to create a pristine working directory to test a clean build.
+
+    -X
+
+    Remove only files ignored by Git. This may be useful to rebuild everything from scratch, but keep manually created files.
+
+    -n, --dry-run
+
+    Don’t actually remove anything, just show what would be done.
+
+    -d
+
+    Remove untracked directories in addition to untracked files. If an untracked directory is managed by a different Git repository, it is not removed by default. Use -f option twice if you really want to remove such a directory.
+
+
+9) How do I check out a remote Git branch?
+
+Somebody pushed a branch called test with git push origin test to a shared repository. I can see the branch with git branch -r.
+
+Now I'm trying to check out the remote test branch.
+
+I've tried:
+
+    git checkout test which does nothing
+
+    git checkout origin/test gives * (no branch). Which is confusing. How can I be on "no branch"?
+
+How do I check out a remote Git branch?
+
+Best Answer:
+
+With One Remote
+
+Jakub's answer actually improves on this. With Git versions ≥ 1.6.6, with only one remote, you can do:
+
+git fetch
+git checkout test
+
+As user masukomi points out in a comment, git checkout test will NOT work in modern git if you have multiple remotes. In this case use
+
+git checkout -b test <name of remote>/test
+
+or the shorthand
+
+git checkout -t <name of remote>/test
+
+With >1 Remotes
+
+Before you can start working locally on a remote branch, you need to fetch it as called out in answers below.
+
+To fetch a branch, you simply need to:
+
+git fetch origin
+
+This will fetch all of the remote branches for you. You can see the branches available for checkout with:
+
+git branch -v -a
+
+With the remote branches in hand, you now need to check out the branch you are interested in, giving you a local working copy:
+
+git checkout -b test origin/test
+
+
+10) How to make Git “forget” about a file that was tracked but is now in .gitignore?
+
+There is a file that was being tracked by git, but now the file is on the .gitignore list.
+
+However, that file keeps showing up in git status after it's edited. How do you force git to completely forget about it?
+
+Best Answer:
+
+.gitignore will prevent untracked files from being added (without an add -f) to the set of files tracked by git, however git will continue to track any files that are already being tracked.
+
+To stop tracking a file you need to remove it from the index. This can be achieved with this command.
+
+git rm --cached <file>
+
+If you want to remove a whole folder, you need to remove all files in it recursively.
+
+git rm -r --cached <folder>
+
+The removal of the file from the head revision will happen on the next commit.
+
+WARNING: While this will not remove the physical file from your local, it will remove the files from other developers machines on next git pull.
+
+
+11) Move the most recent commit(s) to a new branch with Git
+
+I'd
+
+like to move the last several commits I've committed to master to a new branch and take master back to before those commits were made. Unfortunately, my Git-fu is not strong enough yet, any help?
+
+I.e. How can I go from this
+
+master A - B - C - D - E
+
+to this?
+
+newbranch     C - D - E
+             /
+master A - B
+
+Best Answer:
+
+Moving to an existing branch
+
+If you want to move your commits to an existing branch, it will look like this:
+
+git checkout existingbranch
+git merge master
+git checkout master
+git reset --hard HEAD~3 # Go back 3 commits. You *will* lose uncommitted work.
+git checkout existingbranch
+
+Moving to a new branch
+
+WARNING: This method works because you are creating a new branch with the first command: git branch newbranch. If you want to move commits to an existing branch you need to merge your changes into the existing branch before executing git reset --hard HEAD~3 (see Moving to an existing branch above). If you don't merge your changes first, they will be lost.
+
+Unless there are other circumstances involved, this can be easily done by branching and rolling back.
+
+# Note: Any changes not committed will be lost.
+git branch newbranch      # Create a new branch, saving the desired commits
+git reset --hard HEAD~3   # Move master back by 3 commits (Make sure you know how many commits you need to go back)
+git checkout newbranch    # Go to the new branch that still has the desired commits
+
+But do make sure how many commits to go back. Alternatively, you can instead of HEAD~3, simply provide the hash of the commit (or the reference like origin/master) you want to "revert back to" on the master (/current) branch, e.g:
+
+git reset --hard a1b2c3d4
+
+*1 You will only be "losing" commits from the master branch, but don't worry, you'll have those commits in newbranch!
+
+WARNING: With Git version 2.0 and later, if you later git rebase the new branch upon the original (master) branch, you may need an explicit --no-fork-point option during the rebase to avoid losing the carried-over commits. Having branch.autosetuprebase always set makes this more likely. See John Mellor's answer for details.
+
+
+12) How do I discard unstaged changes in Git?
+
+How do I discard changes in my working copy that are not in the index?
+
+Best Answer:
+
+For all unstaged files in current working directory use:
+
+git checkout -- .
+
+For a specific file use:
+
+git checkout -- path/to/file/to/revert
+
+-- here to remove argument ambiguation.
+
+
+13) How to resolve merge conflicts in Git?
+
+How do I resolve merge conflicts in Git?
+
+Best Answer:
+
+Try: git mergetool
+
+It opens a GUI that steps you through each conflict, and you get to choose how to merge. Sometimes it requires a bit of hand editing afterwards, but usually it's enough by itself. It is much better than doing the whole thing by hand certainly.
+
+As per @JoshGlover comment:
+
+The command
+
+    doesn't necessarily open a GUI unless you install one. Running git mergetool for me resulted in vimdiff being used. You can install one of the following tools to use it instead: meld, opendiff, kdiff3, tkdiff, xxdiff, tortoisemerge, gvimdiff, diffuse, ecmerge, p4merge, araxis, vimdiff, emerge.
+
+Below is the sample procedure to use vimdiff for resolve merge conflicts. Based on this link
+
+Step 1: Run following commands in your terminal
+
+git config merge.tool vimdiff
+git config merge.conflictstyle diff3
+git config mergetool.prompt false
+
+This will set vimdiff as the default merge tool.
+
+Step 2: Run following command in terminal
+
+git mergetool
+
+Step 3: You will see a vimdiff display in following format
+
+  ╔═══════╦══════╦════════╗
+  ║       ║      ║        ║
+  ║ LOCAL ║ BASE ║ REMOTE ║
+  ║       ║      ║        ║
+  ╠═══════╩══════╩════════╣
+  ║                       ║
+  ║        MERGED         ║
+  ║                       ║
+  ╚═══════════════════════╝
+
+These 4 views are
+
+    LOCAL – this is file from the current branch
+
+    BASE – common ancestor, how file looked before both changes
+
+    REMOTE – file you are merging into your branch
+
+    MERGED – merge result, this is what gets saved in the repo
+
+You can navigate among these views using ctrl+w. You can directly reach MERGED view using ctrl+w followed by j.
+
+More info about vimdiff navigation here and here
+
+Step 4. You could edit the MERGED view the following way
+
+If you want to get changes from REMOTE
+
+:diffg RE
+
+If you want to get changes from BASE
+
+:diffg BA
+
+If you want to get changes from LOCAL
+
+:diffg LO
+
+Step 5. Save, Exit, Commit and Clean up
+
+:wqa save and exit from vi
+
+git commit -m "message"
+
+git clean Remove extra files (e.g. *.orig) created by diff tool.
+
+
+14) How can I reset or revert a file to a specific revision?
+
+I have made some changes to a file which has been committed a few times as part of a group of files, but now want to reset/revert the changes on it back to a previous version.
+
+I have done a git log along with a git diff to find the revision I need, but just have no idea how to get the file back to its former state in the past.
+
+Best Answer:
+
+Assuming the hash of the commit you want is c5f567:
+
+git checkout c5f567 -- file1/to/restore file2/to/restore
+
+The git checkout man page gives more information.
+
+If you want to revert to the commit before c5f567, append ~1 (where 1 is the number of commits you want to go back, it can be anything):
+
+git checkout c5f567~1 -- file1/to/restore file2/to/restore
+
+As a side note, I've always been uncomfortable with this command because it's used for both ordinary things (changing between branches) and unusual, destructive things (discarding changes in the working directory).
+
+
+15) How do I push a new local branch to a remote Git repository and track it too?
+
+I want to be able to do the following:
+
+1. Create a local branch based on some other (remote or local) branch (via git branch or git checkout -b)
+
+2. Push the local branch to the remote repository (publish), but make it trackable so git pull and git push will work immediately.
+
+How do I do that?
+
+I know about --set-upstream in Git 1.7, but that is a post-creation action. I want to find a way to make a similar change when pushing the branch to the remote repository.
+
+Best Answer:
+
+In Git 1.7.0 and later, you can checkout a new branch:
+
+git checkout -b <branch>
+
+Edit files, add and commit. Then push with the -u (short for --set-upstream) option:
+
+git push -u origin <branch>
+
+Git will set up the tracking information during the push.
+
+
+16) How can I add an empty directory to a Git repository?
+
+How can I add an empty directory (that contains no files) to a Git repository?
+
+Best Answer:
+
+Another way to make a directory stay (almost) empty (in the repository) is to create a .gitignore file inside that directory that contains these four lines:
+
+# Ignore everything in this directory
+*
+# Except this file
+!.gitignore
+
+Then you don't have to get the order right the way that you have to do in m104's solution.
+
+This also gives the benefit that files in that directory won't show up as "untracked" when you do a git status.
+
+Making @GreenAsJade's comment persistent:
+
+    I think it's worth noting that this solution does precisely what the question asked for, but is not perhaps what many people looking at this question will have been looking for. This solution guarantees that the directory remains empty. It says "I truly never want files checked in here". As opposed to "I don't have any files to check in here, yet, but I need the directory here, files may be coming later".
+
+
+17) How can I determine the URL that a local Git repository was originally cloned from?
+
+I pulled a project from GitHub a few days ago. I've since discovered that there are several forks on GitHub, and I neglected to note which one I took originally. How can I determine which of those forks I pulled?
+
+Best Answer:
+
+If you want only the remote URL, or if your are not connected to a network that can reach the remote repo:
+
+git config --get remote.origin.url
+
+If you require full output and you are on a network that can reach the remote repo where the origin resides :
+
+git remote show origin
+
+When using git clone (from GitHub, or any source repository for that matter) the default name for the source of the clone is "origin". Using git remote show will display the information about this remote name. The first few lines should show:
+
+C:\Users\jaredpar\VsVim> git remote show origin
+* remote origin
+  Fetch URL: git@github.com:jaredpar/VsVim.git
+  Push  URL: git@github.com:jaredpar/VsVim.git
+  HEAD branch: master
+  Remote branches:
+
+If you want to use the value in the script, you would use the first command listed in this answer.
+
+
+18) How to clone all remote branches in Git?
+
+I have a master and a development branch, both pushed to GitHub. I've cloned, pulled, and fetched, but I remain unable to get anything other than the master branch back.
+
+I'm sure I'm missing something obvious, but I have read the manual and I'm getting no joy at all.
+
+Best Answer:
+
+First, clone a remote Git repository and cd into it:
+
+$ git clone git://example.com/myproject
+$ cd myproject
+
+Next, look at the local branches in your repository:
+
+$ git branch
+* master
+
+But there are other branches hiding in your repository! You can see these using the -a flag:
+
+$ git branch -a
+* master
+  remotes/origin/HEAD
+  remotes/origin/master
+  remotes/origin/v1.0-stable
+  remotes/origin/experimental
+
+If you just want to take a quick peek at an upstream branch, you can check it out directly:
+
+$ git checkout origin/experimental
+
+But if you want to work on that branch, you'll need to create a local tracking branch which is done automatically by:
+
+$ git checkout experimental
+
+and you will see
+
+Branch experimental set up to track remote branch experimental from origin.
+Switched to a new branch 'experimental'
+
+Here, "new branch" simply means that the branch is taken from the index and created locally for you. As the previous line tells you, the branch is being set up to track the remote branch, which usually means the origin/branch_name branch.
+
+Now, if you look at your local branches, this is what you'll see:
+
+$ git branch
+* experimental
+  master
+
+You can actually track more than one remote repository using git remote.
+
+$ git remote add win32 git://example.com/users/joe/myproject-win32-port
+$ git branch -a
+* master
+  remotes/origin/HEAD
+  remotes/origin/master
+  remotes/origin/v1.0-stable
+  remotes/origin/experimental
+  remotes/win32/master
+  remotes/win32/new-widgets
+
+At this point, things are getting pretty crazy, so run gitk to see what's going on:
+
+$ gitk --all &
+
+
+19) How to change the URI (URL) for a remote Git repository?
+
+I have a repo (origin) on a USB key that I cloned on my hard drive (local). I moved "origin" to a NAS and successfully tested cloning it from here.
+
+I would like to know if I can change the URI of "origin" in the settings of "local" so it will now pull from the NAS, and not from the USB key.
+
+For now, I can see two solutions:
+
+    push everything to the usb-orign, and copy it to the NAS again (implies a lot of work due to new commits to nas-origin);
+
+    add a new remote to "local" and delete the old one (I fear I'll break my history).
+
+Best Answer:
+
+You can
+
+git remote set-url origin new.git.url/here
+
+(see git help remote) or you can edit .git/config and change the URLs there. You're not in any danger of losing history unless you do something very silly (and if you're worried, just make a copy of your repo, since your repo is your history.)
+
+
+20) Reset local repository branch to be just like remote repository HEAD
+
+How do I reset my local branch to be just like the branch on the remote repository?
+
+I did:
+
+git reset --hard HEAD
+
+But when I run a git status,
+
+On branch master
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+      modified:   java/com/mycompany/TestContacts.java
+      modified:   java/com/mycompany/TestParser.java
+
+Can you please tell me why I have these 'modified'? I haven't touched these files? If I did, I want to remove those.
+
+Best Answer:
+
+Setting your branch to exactly match the remote branch can be done in two steps:
+
+git fetch origin
+git reset --hard origin/master
+
+If you want to save your current branch's state before doing this (just in case), you can do:
+
+git commit -a -m "Saving my work, just in case"
+git branch my-saved-work
+
+Now your work is saved on the branch "my-saved-work" in case you decide you want it back (or want to look at it later or diff it against your updated branch).
+
+Note that the first example assumes that the remote repo's name is "origin" and that the branch named "master" in the remote repo matches the currently checked-out branch in your local repo.
+
+BTW, this situation that you're in looks an awful lot like a common case where a push has been done into the currently checked out branch of a non-bare repository. Did you recently push into your local repo? If not, then no worries -- something else must have caused these files to unexpectedly end up modified. Otherwise, you should be aware that it's not recommended to push into a non-bare repository (and not into the currently checked-out branch, in particular).
