@@ -5,27 +5,27 @@ from nltk.tag import pos_tag
 import nltk
 nltk.download('averaged_perceptron_tagger')
 
-file_content = open('datasets/dataset1.txt').read()
+file_content = open('datasets/dataset1.txt', encoding='utf8').read()
 
-#Tokenisation
+# Tokenisation
 tokens = word_tokenize(file_content)
 
-#Stemming
+# Stemming
 stemmed_words = []
 ps = PorterStemmer() 
 for token in tokens:
     stemmed = ps.stem(token)
     stemmed_words.append(stemmed)
 
-#Sentence Segmentation
+# Sentence Segmentation
 
-#Training the model using guven text: unsupervised learning
+# Training the model using given text: unsupervised learning
 tokenizer = PunktSentenceTokenizer()
 tokenizer.train(file_content)
 
 sentence_segmentation = tokenizer.tokenize(file_content)
 
-#POS Tagging
+# POS Tagging
 sentence_domain1 = "All restaurants have children’s menus."
 sentence_domain2 = "All restaurants have children’s menus."
 sentence_domain3 = "All restaurants have children’s menus."
