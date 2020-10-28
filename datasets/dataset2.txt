@@ -34,6 +34,7 @@ The above answer will show you git reflog, which you can use to determine the SH
 
 2 HEAD~ is the same as HEAD~1. Also, see What is the HEAD in git?. It's helpful if you want to uncommit multiple commits.
 
+---xxx---
 
 2) What is the difference between 'git pull' and 'git fetch'?
 
@@ -53,6 +54,7 @@ From the Git documentation for git pull:
 
     In its default mode, git pull is shorthand for git fetch followed by git merge FETCH_HEAD.
 
+---xxx---
 
 3) How do I update a GitHub forked repository?
 
@@ -64,9 +66,9 @@ How can I get that change into my fork? Do I need to delete and re-create my for
 
 Best Answer:
 
+In your local clone of your forked repository, you can add the original GitHub repository as a "remote". ("Remotes" are like nicknames for the URLs of repositories - origin is one, for example.) Then you can fetch all the branches from that upstream repository, and rebase your work to continue working on the upstream version.
 
-
-In your local clone of your forked repository, you can add the original GitHub repository as a "remote". ("Remotes" are like nicknames for the URLs of repositories - origin is one, for example.) Then you can fetch all the branches from that upstream repository, and rebase your work to continue working on the upstream version. In terms of commands that might look like:
+In terms of commands that might look like:
 
 # Add the remote, call it "upstream":
 
@@ -95,6 +97,7 @@ git push -f origin main
 
 You only need to use the -f the first time after you've rebased.
 
+---xxx---
 
 4) How do I undo 'git add' before commit?
 
@@ -106,22 +109,22 @@ I have not yet run git commit. Is there a way to undo this, so these files won't
 
 Best Answer:
 
-You can undo git add before commit with
+You can undo git add before commit with git reset <file> which will remove it from the current
+index (the "about to be committed" list) without changing anything else.
 
-git reset <file>
+You can use git reset without any file name to unstage all due changes.
 
-which will remove it from the current index (the "about to be committed" list) without changing anything else.
+This can come in handy when there are too many files to be listed one by one in a reasonable amount of time.
 
-You can use
+In old versions of Git, the above commands are equivalent to git reset HEAD <file> and git reset HEAD respectively,
+and will fail if HEAD is undefined (because you haven't yet made any commits in your repository) or
+ambiguous (because you created a branch called HEAD, which is a stupid thing that you shouldn't do).
 
-git reset
-
-without any file name to unstage all due changes. This can come in handy when there are too many files to be listed one by one in a reasonable amount of time.
-
-In old versions of Git, the above commands are equivalent to git reset HEAD <file> and git reset HEAD respectively, and will fail if HEAD is undefined (because you haven't yet made any commits in your repository) or ambiguous (because you created a branch called HEAD, which is a stupid thing that you shouldn't do). This was changed in Git 1.8.2, though, so in modern versions of Git you can use the commands above even prior to making your first commit:
+This was changed in Git 1.8.2, though, so in modern versions of Git you can use the commands above even prior to making your first commit:
 
     "git reset" (without options or parameters) used to error out when you do not have any commits in your history, but it now gives you an empty index (to match non-existent commit you are not even on).
 
+---xxx---
 
 5) How to modify existing, unpushed commit messages?
 
@@ -177,6 +180,7 @@ Documentation
 
     git-push(1) Manual Page
 
+---xxx---
 
 6) How do I revert a Git repository to a previous commit?
 
@@ -274,6 +278,7 @@ If you decide you didn't want to revert after all, you can revert the revert (as
 You may also find this answer helpful in this case:
 How can I move HEAD back to a previous location? (Detached head) & Undo commits
 
+---xxx---
 
 7) How do I force “git pull” to overwrite local files?
 
@@ -340,6 +345,7 @@ And then to reapply these uncommitted changes:
 
 git stash pop
 
+---xxx---
 
 8) How to remove local (untracked) files from the current Git working tree
 
@@ -402,6 +408,7 @@ Again see the git-clean docs for more information.
 
     Remove untracked directories in addition to untracked files. If an untracked directory is managed by a different Git repository, it is not removed by default. Use -f option twice if you really want to remove such a directory.
 
+---xxx---
 
 9) How do I check out a remote Git branch?
 
@@ -450,6 +457,7 @@ With the remote branches in hand, you now need to check out the branch you are i
 
 git checkout -b test origin/test
 
+---xxx---
 
 10) How to make Git “forget” about a file that was tracked but is now in .gitignore?
 
@@ -473,6 +481,7 @@ The removal of the file from the head revision will happen on the next commit.
 
 WARNING: While this will not remove the physical file from your local, it will remove the files from other developers machines on next git pull.
 
+---xxx---
 
 11) Move the most recent commit(s) to a new branch with Git
 
@@ -521,6 +530,7 @@ git reset --hard a1b2c3d4
 
 WARNING: With Git version 2.0 and later, if you later git rebase the new branch upon the original (master) branch, you may need an explicit --no-fork-point option during the rebase to avoid losing the carried-over commits. Having branch.autosetuprebase always set makes this more likely. See John Mellor's answer for details.
 
+---xxx---
 
 12) How do I discard unstaged changes in Git?
 
@@ -538,6 +548,7 @@ git checkout -- path/to/file/to/revert
 
 -- here to remove argument ambiguation.
 
+---xxx---
 
 13) How to resolve merge conflicts in Git?
 
@@ -617,6 +628,7 @@ git commit -m "message"
 
 git clean Remove extra files (e.g. *.orig) created by diff tool.
 
+---xxx---
 
 14) How can I reset or revert a file to a specific revision?
 
@@ -638,6 +650,7 @@ git checkout c5f567~1 -- file1/to/restore file2/to/restore
 
 As a side note, I've always been uncomfortable with this command because it's used for both ordinary things (changing between branches) and unusual, destructive things (discarding changes in the working directory).
 
+---xxx---
 
 15) How do I push a new local branch to a remote Git repository and track it too?
 
@@ -663,6 +676,7 @@ git push -u origin <branch>
 
 Git will set up the tracking information during the push.
 
+---xxx---
 
 16) How can I add an empty directory to a Git repository?
 
@@ -685,6 +699,7 @@ Making @GreenAsJade's comment persistent:
 
     I think it's worth noting that this solution does precisely what the question asked for, but is not perhaps what many people looking at this question will have been looking for. This solution guarantees that the directory remains empty. It says "I truly never want files checked in here". As opposed to "I don't have any files to check in here, yet, but I need the directory here, files may be coming later".
 
+---xxx---
 
 17) How can I determine the URL that a local Git repository was originally cloned from?
 
@@ -711,6 +726,7 @@ C:\Users\jaredpar\VsVim> git remote show origin
 
 If you want to use the value in the script, you would use the first command listed in this answer.
 
+---xxx---
 
 18) How to clone all remote branches in Git?
 
@@ -776,6 +792,7 @@ At this point, things are getting pretty crazy, so run gitk to see what's going 
 
 $ gitk --all &
 
+---xxx---
 
 19) How to change the URI (URL) for a remote Git repository?
 
@@ -797,6 +814,7 @@ git remote set-url origin new.git.url/here
 
 (see git help remote) or you can edit .git/config and change the URLs there. You're not in any danger of losing history unless you do something very silly (and if you're worried, just make a copy of your repo, since your repo is your history.)
 
+---xxx---
 
 20) Reset local repository branch to be just like remote repository HEAD
 
