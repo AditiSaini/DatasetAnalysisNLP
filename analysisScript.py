@@ -1,10 +1,13 @@
 from nltk.tokenize import word_tokenize
-from nltk.stem import PorterStemmer 
+from nltk.tokenize import sent_tokenize
+from nltk.stem import PorterStemmer
 from nltk.tokenize.punkt import PunktSentenceTokenizer, PunktParameters
 from nltk.tag import pos_tag
 import nltk
+
 nltk.download('averaged_perceptron_tagger')
 from nltk.corpus import stopwords
+
 nltk.download('stopwords')
 from matplotlib import pyplot as plt
 from keras.preprocessing.text import text_to_word_sequence
@@ -14,7 +17,7 @@ import sys
 
 def performStemming(tokens):
     stemmed_words = []
-    ps = PorterStemmer() 
+    ps = PorterStemmer()
     for token in tokens:
         stemmed = ps.stem(token)
         stemmed_words.append(stemmed)
@@ -28,7 +31,7 @@ def removeStopWords(tokens):
 
 
 def performSentenceSegmentation(file_content):
-    #Training the model using given text: unsupervised learning
+    # Training the model using given text: unsupervised learning
     tokenizer = PunktSentenceTokenizer()
     tokenizer.train(file_content)
     sentence_segmentation = tokenizer.tokenize(file_content)
@@ -47,17 +50,17 @@ def printPOSTagged(pos_tagged):
         print(pos_tagged[tag])
         print('\n\n')
 
-#Get sentence length
+# Get sentence length
 def averageSentenceLength(segmented_sentence):
     total = 0
     size = len(segmented_sentence)
     for s in segmented_sentence:
         words = s.split()
-        total+=len(words)
-    return total/size
+        total += len(words)
+    return total / size
 
 
-#Plotting graph
+# Plotting graph
 def plotgraph(freqdict, graphname, xlabel, ylabel):
     x = list(freqdict.keys())
     y = list(freqdict.values())
@@ -66,42 +69,43 @@ def plotgraph(freqdict, graphname, xlabel, ylabel):
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.tight_layout()
-    #plt.show()
+    # plt.show()
     plt.savefig(graphname + '.png')
     plt.clf()
 
 
-#the x-axis is the length of a token in number of characters, and the y-axis is the number of tokens of each length
+# the x-axis is the length of a token in number of characters, and the y-axis is the number of tokens of each length
 def visualTokenAnalysis(tokens):
     token_analysis = {}
     for token in tokens:
         if len(token) in token_analysis.keys():
-            token_analysis[len(token)]+=1
+            token_analysis[len(token)] += 1
         else:
-            token_analysis[len(token)]=1
+            token_analysis[len(token)] = 1
     return token_analysis
 
 
-#the x-axis is the length of a sentence in number of tokens/words, and the y-axis is the number of sentences of each length
+# the x-axis is the length of a sentence in number of tokens/words
+# the y-axis is the number of sentences of each length
 def visualSentenceAnalysis(sentence_segmentation):
     sentence_analysis = {}
     for sentence in sentence_segmentation:
         words = word_tokenize(sentence)
         words_size = len(words)
         if words_size in sentence_analysis.keys():
-            sentence_analysis[words_size]+=1
+            sentence_analysis[words_size] += 1
         else:
-            sentence_analysis[words_size]=1
+            sentence_analysis[words_size] = 1
     return sentence_analysis
 
 
 def top20Words(tokens):
-    token_size = heapdict.heapdict() 
+    token_size = heapdict.heapdict()
     for token in tokens:
         if token in token_size.keys():
-            token_size[token]-=1
+            token_size[token] -= 1
         else:
-            token_size[token]=-1
+            token_size[token] = -1
     top20 = []
     for poptokens in range(20):
         top20.append(token_size.popitem()[0])
