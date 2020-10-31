@@ -11,8 +11,6 @@ from keras.preprocessing.text import text_to_word_sequence
 import heapdict
 from gensim.models.phrases import Phrases, Phraser
 import sys
-import os
-
 
 def performStemming(tokens):
     stemmed_words = []
