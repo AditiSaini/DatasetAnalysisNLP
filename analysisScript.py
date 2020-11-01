@@ -9,7 +9,6 @@ nltk.download('stopwords')
 from matplotlib import pyplot as plt
 from keras.preprocessing.text import text_to_word_sequence
 import heapdict
-from gensim.models.phrases import Phrases, Phraser
 import sys
 
 def performStemming(tokens):
@@ -180,7 +179,7 @@ def main(dataset):
     #9: POS Tagging
     ##9.1 Sentences from each datasets 1, 2, 3
     if dataset=="dataset1.txt":
-        sentences = ["All restaurants have children’s menus.", "Complimentary amenities include a welcome pack and daily ice-cream passes", "You won’t have to jostle with other hotel guests even if there’s a crowd."]
+        sentences = ["All restaurants have children’s menus.", "Complimentary amenities include a welcome pack and daily ice-cream passes", "Ash & Elm is the hotel’s pride and joy"]
     elif dataset=="dataset2.txt":
         sentences = ["Now your work is saved on the branch 'my-saved-work' in case you decide you want it back (or want to look at it later or diff it against your updated branch).", 
         "Note that the first example assumes that the remote repo's name is 'origin' and that the branch named 'master' in the remote repo matches the currently checked-out branch in your local repo.", 
