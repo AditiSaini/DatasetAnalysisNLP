@@ -186,9 +186,9 @@ def main(dataset):
         "Note that the first example assumes that the remote repo's name is 'origin' and that the branch named 'master' in the remote repo matches the currently checked-out branch in your local repo.", 
         "BTW, this situation that you're in looks an awful lot like a common case where a push has been done into the currently checked out branch of a non-bare repository."]
     elif dataset=="dataset3.txt":
-        sentences = ["Unfortunately, no consensus has  emerged  about  the  form  or  the  existence  of  such  a  data  structure.", 
-        "Such systems are often viewed as software components for constructing real-world NLP solutions.", 
-        "Interactive Voice Response (IVR) applications used in call centers to respond to certain users’ requests."]
+        sentences = ["GMU Computer Science @GMUCompSci will not require the GRE for graduate program applications!", 
+        "From distant supervision to data augmentation to meta-learning.", 
+        "Congrats to Lucy Havens and her co-authors on her paper at the Gender Bias in NLP Workshop at COLING 2020!"]
     ##9.2 POS Tagged sentences
     pos_tagged = performPOSTagging(sentences)
     print("POS Tagged sentence: ")
