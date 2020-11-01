@@ -3,17 +3,16 @@ from nltk.tokenize import sent_tokenize
 from nltk.stem import PorterStemmer
 from nltk.tokenize.punkt import PunktSentenceTokenizer, PunktParameters
 from nltk.tag import pos_tag
-import nltk
-
-nltk.download('averaged_perceptron_tagger')
 from nltk.corpus import stopwords
-
-nltk.download('stopwords')
 from matplotlib import pyplot as plt
 from keras.preprocessing.text import text_to_word_sequence
-import heapdict
 from gensim.models.phrases import Phrases, Phraser
+import nltk
+import heapdict
 import sys
+nltk.download('averaged_perceptron_tagger')
+nltk.download('stopwords')
+
 
 def performStemming(tokens):
     stemmed_words = []
@@ -44,11 +43,13 @@ def performPOSTagging(sentences):
         pos_tagged[sentence] = pos_tag(word_tokenize(sentence))
     return pos_tagged
 
+
 def printPOSTagged(pos_tagged):
     for tag in pos_tagged:
         print(tag)
         print(pos_tagged[tag])
         print('\n\n')
+
 
 # Get sentence length
 def averageSentenceLength(segmented_sentence):
@@ -143,6 +144,7 @@ def improveTokeniser(sentence_segmentation):
             phrases.append("_".join([x[0] for x in phrase.leaves()]))
     return phrases
 
+
 def writeToFile(filename, value):
     text_file = open(filename, "w")
     text_file.write(value)
@@ -153,20 +155,20 @@ def main(dataset):
     print("\n\n\n\n\n")
     print(".........STARTING ANALYSIS.........")
     print("\n\n")
-    #1: Load databases
+    # 1: Load databases
     file_content = open('datasets/' + dataset).read()
-    #2: Split the content for each review
+    # 2: Split the content for each review
     each_reviews = file_content.split("---xxx---")
-    #3: Tokenisation
+    # 3: Tokenisation
     tokens = text_to_word_sequence(file_content)
     writeToFile("1_tokens_" + dataset, "\n".join(tokens))
-    #4: Remove stop words from text
+    # 4: Remove stop words from text
     tokens_without_sw = removeStopWords(tokens)
     writeToFile("2_tokens_without_sw_" + dataset, "\n".join(tokens_without_sw))
-    #5: Stemming
+    # 5: Stemming
     stemmed_words = performStemming(tokens_without_sw)
     writeToFile("3_stemmed_words_" + dataset, "\n".join(stemmed_words))
-    #6: Top 20 words
+    # 6: Top 20 words
     top20 = top20Words(tokens_without_sw)
     print("Top 20 words: ")
     print(top20)
@@ -175,14 +177,14 @@ def main(dataset):
     print("Top 20 stemmed words: ")
     print(top20StemmedWords)
     print("\n\n--------------\n\n")
-    #7: Sentence segmentation
+    # 7: Sentence segmentation
     sentence_segmentation = performSentenceSegmentation(file_content)
     writeToFile("4_sentence_segmentation_" + dataset, "\n".join(sentence_segmentation))
-    #8: Improving tokeniser by extracting noun phrases
+    # 8: Improving tokeniser by extracting noun phrases
     phrases = improveTokeniser(sentence_segmentation)
     writeToFile("5_phrases_with_improved_tokeniser_" + dataset, "\n".join(phrases))
-    #9: POS Tagging
-    ##9.1 Sentences from each datasets 1, 2, 3
+    # 9: POS Tagging
+    # 9.1 Sentences from each datasets 1, 2, 3
     if dataset=="dataset1.txt":
         sentences = ["All restaurants have children’s menus.", "Complimentary amenities include a welcome pack and daily ice-cream passes", "You won’t have to jostle with other hotel guests even if there’s a crowd."]
     elif dataset=="dataset2.txt":
@@ -193,21 +195,22 @@ def main(dataset):
         sentences = ["Unfortunately, no consensus has  emerged  about  the  form  or  the  existence  of  such  a  data  structure.", 
         "Such systems are often viewed as software components for constructing real-world NLP solutions.", 
         "Interactive Voice Response (IVR) applications used in call centers to respond to certain users’ requests."]
-    ##9.2 POS Tagged sentences
+    # 9.2 POS Tagged sentences
     pos_tagged = performPOSTagging(sentences)
     print("POS Tagged sentence: ")
     printPOSTagged(pos_tagged)
     print("\n\n--------------\n\n")
-    #10: Average length of each sentence
+    # 10: Average length of each sentence
     avg_length = averageSentenceLength(sentence_segmentation)
     print("Avg length of a sentence: ")
     print(avg_length)
     print("\n\n--------------\n\n")
-    #11: Graphical analysis
+    # 11: Graphical analysis
     token_analysis = visualTokenAnalysis(tokens_without_sw)
     stemmed_token_analysis = visualTokenAnalysis(stemmed_words)
     sentence_analysis = visualSentenceAnalysis(sentence_segmentation)
     performVisualAnalysis(dataset, token_analysis, stemmed_token_analysis, sentence_analysis)
+
 
 if __name__ == "__main__":
     dataset = sys.argv[1]
